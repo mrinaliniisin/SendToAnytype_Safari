@@ -1,0 +1,20 @@
+# Build & release artifacts (produced by scripts/release.sh)
+build/
+dist/
+*.dmg
+*.xcarchive
+ExportOptions.plist
+
+# Xcode per-user state — never belongs in a shared repo
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+DerivedData/
+
+# macOS cruft
+.DS_Store
+
+# Signing material — must NEVER be committed
+*.p12
+*.cer
+*.mobileprovision
