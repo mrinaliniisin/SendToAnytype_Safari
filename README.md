@@ -31,37 +31,6 @@ can **Unpair** any time from the same panel. After pairing, pick your target
 
 ---
 
-## Install (no Xcode required)
-
-Send to Anytype is distributed two ways. Both yield the same extension; pick
-whichever fits how you usually install software.
-
-### Option A — Mac App Store *(coming soon)*
-One-click install from the App Store once the listing is live.
-
-### Option B — Direct download (notarized DMG)
-1. Download the latest **`Send to Anytype-x.y.z.dmg`** from the
-   [Releases](../../releases) page.
-2. Open the DMG and drag **Send to Anytype.app** into your **Applications**
-   folder.
-3. Launch **Send to Anytype.app** once. (It's a small host app whose only job
-   is to register the extension with Safari — you can quit it right after.)
-4. Open **Safari → Settings → Extensions** and tick **Send to Anytype** to
-   enable it. Grant it permission on the sites you want (e.g. "Always Allow on
-   Every Website").
-5. Make sure the Anytype desktop app is running, then click the Send to
-   Anytype icon in Safari's toolbar on any page and pair (see above).
-
-Because the DMG is signed with a Developer ID and notarized by Apple, you will
-**not** need to enable "Allow Unsigned Extensions" — it just works.
-
-### Keyboard shortcut
-
-Default: <kbd>⌥</kbd> <kbd>⇧</kbd> <kbd>A</kbd>. Change it under
-**Safari → Settings → Extensions → Send to Anytype**.
-
----
-
 ## How it works
 
 | Component | Role |
@@ -73,42 +42,6 @@ Default: <kbd>⌥</kbd> <kbd>⇧</kbd> <kbd>A</kbd>. Change it under
 The selected text becomes the new object's Markdown body, selected images are
 embedded as `![](url)`, the page title becomes the object name (editable in the
 panel), and a `[Source](url)` link is appended.
-
----
-
-## Build it yourself (developers)
-
-Requires Xcode and a running Anytype desktop app.
-
-```sh
-git clone <this-repo>
-cd "Send to Anytype"
-open "Send to Anytype.xcodeproj"
-```
-
-1. Select the **Send to Anytype (macOS)** scheme.
-2. **Product → Run** (⌘R). This builds the host app + extension and launches
-   the app once so Safari registers it.
-3. **Safari → Develop → Allow Unsigned Extensions** (resets every Safari
-   launch — only needed for locally-built, un-notarized builds).
-4. **Safari → Settings → Extensions** → enable **Send to Anytype**.
-
-Editing the web sources under `Shared (Extension)/Resources/` only needs a
-rebuild (⌘R) + page reload. Changing `manifest.json` or Swift code may need a
-Safari relaunch so it re-reads the manifest.
-
-The web extension is **Manifest V3**.
-
-### Bundle identifiers
-
-The scaffold ships with placeholder bundle IDs under `com.sindhus.*`:
-
-- App: `com.sindhus.sendtoanytype`
-- Extension: `com.sindhus.sendtoanytype.Extension`
-
-If you change them, update `extensionBundleIdentifier` in
-`Shared (App)/ViewController.swift` to match the extension's ID exactly, or the
-host app won't be able to register/query the extension.
 
 ---
 
