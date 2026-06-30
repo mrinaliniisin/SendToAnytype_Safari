@@ -42,31 +42,3 @@ can **Unpair** any time from the same panel. After pairing, pick your target
 The selected text becomes the new object's Markdown body, selected images are
 embedded as `![](url)`, the page title becomes the object name (editable in the
 panel), and a `[Source](url)` link is appended.
-
----
-
-## Releasing
-
-Send to Anytype ships through two parallel channels — same source tree, two
-signing pipelines:
-
-- **[RELEASING.md](RELEASING.md)** — cut a notarized DMG for direct download
-  via GitHub Releases. Uses the *Developer ID Application* certificate and
-  `scripts/release.sh`.
-- **[APP_STORE.md](APP_STORE.md)** — submit to the Mac App Store. Uses the
-  *Apple Distribution* + *Mac Installer Distribution* certificates and the
-  Transporter upload flow.
-
-You can do either, both, or one before the other — they don't interfere.
-
----
-
-## Status / known gaps
-
-- **Tags** aren't attached yet — Anytype tags are a per-type relation property,
-  which is more plumbing than a flat tag list. Tracked in
-  `Shared (Extension)/Resources/BACKLOG.md`.
-- **Icons** are placeholders inherited from the project scaffold.
-- **Images** are embedded by URL, not uploaded into Anytype's file store.
-
-See `BACKLOG.md` for the full list.
