@@ -107,6 +107,17 @@ xcodebuild -exportArchive \
 APP_PATH="${EXPORT_DIR}/${APP_NAME}.app"
 [ -d "${APP_PATH}" ] || { echo "✗ Export failed: ${APP_PATH} not found" >&2; exit 1; }
 
+# ── 2b. Strip stray xattrs so `codesign --strict` stays clean ───────────────
+# Source files that passed through Finder can carry com.apple.FinderInfo (and
+# similar "detritus") xattrs that get baked into the bundle. They are NOT part
+# of the code signature, but their presence makes `codesign --verify --strict`
+# reject the app. Stripping them is signature-safe — no re-sign needed — and
+# the notarized Developer ID stays intact. We then assert strict verification
+# so a regression here fails the release loudly instead of shipping.
+echo "▸ Stripping stray xattrs from the exported app…"
+xattr -cr "${APP_PATH}"
+codesign --verify --deep --strict --verbose=2 "${APP_PATH}"
+
 # Derive the version from the built app so the DMG filename matches the release.
 VERSION="$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "${APP_PATH}/Contents/Info.plist" 2>/dev/null || echo "0.0.0")"
 DMG_PATH="${OUTPUT_DIR}/${APP_NAME}-${VERSION}.dmg"
@@ -137,6 +148,15 @@ else
     "${DMG_PATH}" >/dev/null
 fi
 
+# ── 3b. Sign the DMG itself with Developer ID ───────────────────────────────
+# Notarizing + stapling an unsigned DMG works (Gatekeeper trusts the stapled
+# ticket), but signing the disk image too means the download itself carries a
+# verifiable Developer ID — so `spctl -a -t open` accepts the .dmg, not just
+# the app inside it. Must happen BEFORE notarization (you notarize the signed
+# image).
+echo "▸ Signing the DMG…"
+codesign --force --timestamp --sign "${SIGNING_IDENTITY}" "${DMG_PATH}"
+
 # ── 4. Notarize the DMG and wait for the verdict ────────────────────────────
 echo "▸ [4/5] Notarizing (this can take a few minutes)…"
 xcrun notarytool submit "${DMG_PATH}" \
@@ -151,5 +171,5 @@ xcrun stapler validate "${DMG_PATH}"
 echo
 echo "✓ Done: ${DMG_PATH}"
 echo "  Verify Gatekeeper acceptance with:"
-echo "    spctl -a -vvv -t install \"${DMG_PATH}\""
+echo "    spctl -a -vvv -t open --context context:primary-signature \"${DMG_PATH}\""
 echo "  Then attach this DMG to your GitHub release."

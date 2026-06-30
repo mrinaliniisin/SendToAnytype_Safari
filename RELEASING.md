@@ -109,10 +109,20 @@ xcrun stapler staple dist/Send to Anytype-<v>.dmg
 ## 7. Verify the DMG before uploading
 ```sh
 xcrun stapler validate dist/Send to Anytype-*.dmg          # "The validate action worked"
-spctl -a -vvv -t install dist/Send to Anytype-*.dmg        # "accepted" + "Notarized Developer ID"
+# Assess the DMG as a *download* — use -t open, NOT -t install (that's for .pkg
+# installers and will say "no usable signature" on a perfectly good DMG):
+spctl -a -vvv -t open --context context:primary-signature dist/Send to Anytype-*.dmg
+# expect: accepted + "source=Developer ID"
 ```
-Both must pass. If `spctl` says rejected, the build wasn't notarized/stapled —
-re-run step 6, don't upload.
+Both must pass. If `spctl` says rejected, the build wasn't signed/notarized/
+stapled — re-run step 6, don't upload.
+
+To check the *app inside* (the verdict a user's Mac gives at launch), mount the
+DMG and run `spctl -a -vvvv "/Volumes/…/Send to Anytype.app"` — expect
+`accepted` + `source=Notarized Developer ID`. `release.sh` strips stray
+`com.apple.FinderInfo` xattrs before packaging so `codesign --verify --strict`
+stays clean; if you ever see "resource fork … detritus not allowed", that strip
+is what prevents it.
 
 ## 8. Publish the GitHub release
 ```sh
