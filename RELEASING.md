@@ -119,10 +119,17 @@ stapled — re-run step 6, don't upload.
 
 To check the *app inside* (the verdict a user's Mac gives at launch), mount the
 DMG and run `spctl -a -vvvv "/Volumes/…/Send to Anytype.app"` — expect
-`accepted` + `source=Notarized Developer ID`. `release.sh` strips stray
-`com.apple.FinderInfo` xattrs before packaging so `codesign --verify --strict`
-stays clean; if you ever see "resource fork … detritus not allowed", that strip
-is what prevents it.
+`accepted` + `source=Notarized Developer ID`.
+
+**About `codesign --verify --strict` and "resource fork … detritus not
+allowed":** you may see this on the app inside (or copied out of) the DMG. It is
+**benign and not a release blocker.** macOS synthesizes an *empty*
+`com.apple.FinderInfo` on bundle directories lazily (Finder/Spotlight), so it
+reappears no matter how often you strip it, and regardless of HFS+ vs APFS image
+format. It is not sealed into the code signature. The gates that actually govern
+users — **notarization (Accepted), DMG `spctl -t open`, and app `spctl -a`** —
+all pass with it present, which is why `release.sh` verifies without `--strict`.
+Do not chase it; ship if the three gates above are green.
 
 ## 8. Publish the GitHub release
 ```sh
