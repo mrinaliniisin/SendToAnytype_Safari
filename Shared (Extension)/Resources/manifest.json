@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Send to Anytype",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Clip selected images and text from any webpage into your local Anytype (localhost:31009).",
   "action": {
     "default_title": "Send to Anytype: pick items to clip (⌥⇧A)",
