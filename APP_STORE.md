@@ -63,10 +63,10 @@ parent app's profile covers the nested appex.
 [appstoreconnect.apple.com](https://appstoreconnect.apple.com) →
 **Apps → ＋ → New App**:
 - Platform: **macOS**
-- Name: e.g. "Send to Anytype for Anytype" (unique across the entire store)
+- Name: e.g. "Send to Anytype – Web Clipper" (must be unique across the entire store)
 - Primary Language: English
 - Bundle ID: pick **`com.sindhus.sendtoanytype`** from the dropdown (created in §1)
-- SKU: anything; conventionally `roger-mac-001`
+- SKU: anything; conventionally `sendtoanytype-mac-001`
 - Full Access vs Limited Access: Full
 
 Then under **Pricing and Availability** → **Free**.
@@ -172,32 +172,38 @@ This is where you mitigate the "app does nothing without Anytype" rejection.
 ### App Review notes (App Store Connect → App Information → App Review Information)
 Write something like:
 
-> Send to Anytype is a companion Safari extension for **Anytype**, a self-hosted
-> personal-inventory web app the user runs locally at
-> `http://localhost:31009`. Send to Anytype lets the user click images and text on
-> any product page and send them to their local Anytype instance as a new
-> inventory item.
+> Send to Anytype is a companion Safari extension for **Anytype**
+> (https://anytype.io), a local-first notes and knowledge app the user runs
+> on their own Mac. Anytype exposes a local API at `http://localhost:31009`.
+> Send to Anytype lets the user click images and text on any web page and clip
+> them into their local Anytype as a new object (e.g. a Page), with a link
+> back to the source page.
 >
-> Because Send to Anytype requires a running Anytype server, full end-to-end testing
-> on Apple's review VM is not possible. Please refer to the attached
-> screen recording, which walks through the full flow on a Mac with Anytype
-> running locally. Send to Anytype itself is fully functional in isolation —
-> clicking the toolbar icon opens the in-page UI immediately, regardless
-> of Anytype's status — and shows a clear "couldn't reach Anytype" message
-> when the server is absent, so the app's purpose and UI are
-> demonstrable without the backend.
+> Two things make full end-to-end testing on Apple's review VM impossible:
+> (1) it requires the **Anytype desktop app to be running** locally, and
+> (2) a **one-time pairing** in which Anytype displays a 4-digit code the
+> user types into the extension to authorize local API access. Please refer
+> to the attached screen recording, which walks through the full flow on a
+> Mac with Anytype running and paired. The extension itself is fully
+> functional in isolation — clicking the toolbar icon opens the in-page
+> selection UI immediately regardless of Anytype's status, and it shows a
+> clear "can't reach Anytype — pair first" state when the server is absent
+> or unpaired — so the app's purpose and UI are demonstrable without the
+> backend.
 
 ### Demo video (attach as a review attachment, ≤ 5 min)
 Record a screen capture showing:
-1. Toolbar icon on a real product page (e.g. an Etsy listing).
-2. Edit mode activating, selecting an image + text block.
-3. Tag picker, then Send to Anytype.
-4. The new product appearing in the Anytype UI on `localhost:31009`.
+1. One-time pairing: the panel's gear (⚙) → **Pair with Anytype**, entering
+   the 4-digit code Anytype displays.
+2. Toolbar icon on any web page (e.g. a Wikipedia article); edit mode
+   activating; selecting an image + a text block.
+3. Picking the target **Space** and object **Type**, then **Send to Anytype**.
+4. The new object appearing in the Anytype desktop app.
 
 ### Listing assets
 | Asset | Spec | Where |
 |---|---|---|
-| App icon (`AppIcon`) | 1024×1024 PNG, no alpha, no rounded corners | Asset catalog in `macOS (App)` |
+| App icon (`AppIcon`) | Full macOS icon set through 512pt@2x (1024×1024). macOS icons keep their rounded-rect shape + transparency — don't flatten to a square | Asset catalog in `macOS (App)` |
 | Screenshots | 1280×800 or 1440×900 mac screenshots showing the extension in action | App Store Connect |
 | Description / keywords | Plain-text description + comma-separated keywords | App Store Connect |
 | Privacy policy URL | A live URL describing what Send to Anytype collects (URLs, image refs, text snippets — all sent only to user's localhost) | App Store Connect |
