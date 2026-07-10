@@ -190,6 +190,16 @@ Write something like:
 > clear "can't reach Anytype — pair first" state when the server is absent
 > or unpaired — so the app's purpose and UI are demonstrable without the
 > backend.
+>
+> Why the extension requests access to all websites: clipping is initiated
+> only by the user, who clicks the toolbar button and then clicks the specific
+> images and text they want. To save a selected image, the extension must
+> download that image's bytes — and images are almost always served from a
+> different host than the page itself (a CDN), so access cannot be scoped to
+> the current site. The extension reads nothing until the user explicitly
+> starts a clip, and never runs in the background on pages the user is merely
+> browsing. Image downloads are made without cookies or credentials, and all
+> clipped content is sent only to the user's own local Anytype instance.
 
 ### Demo video (attach as a review attachment, ≤ 5 min)
 Record a screen capture showing:

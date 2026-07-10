@@ -108,9 +108,19 @@ rejection. Also attach the demo video described in APP_STORE.md §8.)
 > the server is absent or unpaired. So the app's purpose and UI are
 > demonstrable without the backend.
 >
-> The app does not collect any data. All clipped content is sent only to the
-> user's own localhost Anytype instance; nothing is transmitted to us or any
-> third party.
+> Why the extension requests access to all websites: clipping is initiated
+> only by the user, who clicks the toolbar button and then clicks the specific
+> images and text they want. To save a selected image, the extension must
+> download that image's bytes — and images are almost always served from a
+> different host than the page itself (a CDN), so access cannot be scoped to
+> the current site. The extension reads nothing until the user explicitly
+> starts a clip, and it never runs in the background on pages the user is
+> merely browsing.
+>
+> The app does not collect any data. All clipped content — including the
+> downloaded images — is sent only to the user's own localhost Anytype
+> instance; nothing is transmitted to us or any third party. Image downloads
+> are made without cookies or credentials.
 
 ---
 

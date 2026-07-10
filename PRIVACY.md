@@ -18,6 +18,19 @@ Send to Anytype is a Safari extension that clips content from web pages into
   mechanics, or to any external server. All traffic stays on your machine
   (the loopback address `localhost`).
 
+## Why the extension asks for access to all websites
+
+Safari asks you to grant Send to Anytype access to the websites you use. It
+needs this for one reason: **to download the images you select.** Images are
+usually served from a different host than the page you're reading (a CDN), so
+the permission cannot be narrowed to just the site you're on.
+
+The extension does nothing until you click its toolbar button. It does not run
+in the background on pages you are merely browsing, does not read pages you
+haven't chosen to clip, and never sends page content anywhere except your own
+local Anytype. Image downloads are made **without cookies or credentials**, so
+they cannot carry your logged-in identity to the image's host.
+
 ## The pairing key
 
 To talk to your local Anytype, the extension performs a one-time pairing in
