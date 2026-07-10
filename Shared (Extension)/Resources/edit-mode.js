@@ -136,6 +136,7 @@
     button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
     .status { font-size: 12px; min-height: 16px; text-align: center; margin-top: 8px; }
     .status.ok { color: #1c7c2e; }
+    .status.warn { color: #8a5a00; line-height: 1.35; }
     .status.err { color: #b3261e; }
     .mini-status { font-size: 11px; color: #777; margin-top: 6px; min-height: 14px; }
     .mini-status.err { color: #b3261e; }
@@ -830,8 +831,23 @@
     try {
       const r = await send({ type: "sta:send", payload });
       if (r && r.ok) {
-        setStatus("Saved to Anytype ✓", "ok");
-        setTimeout(exit, 800);
+        // The object saved, but parts of it may have quietly degraded. Say so
+        // instead of flashing a clean checkmark over a partial result.
+        const notes = [];
+        if (r.imagesFailed > 0) {
+          notes.push(
+            `${r.imagesFailed}/${r.imagesTotal} image${r.imagesTotal === 1 ? "" : "s"} couldn't be downloaded — saved as links`
+          );
+        }
+        if (r.deepLinkFailed) notes.push("couldn't open it in Anytype");
+
+        if (notes.length) {
+          setStatus("Saved ✓ — " + notes.join("; "), "warn");
+          setTimeout(exit, 3200);
+        } else {
+          setStatus("Saved to Anytype ✓", "ok");
+          setTimeout(exit, 800);
+        }
       } else {
         setStatus("Failed: " + ((r && r.error) || "unknown error"), "err");
         refreshSendEnabled();

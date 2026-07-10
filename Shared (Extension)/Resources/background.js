@@ -109,6 +109,29 @@ async function api(path, { method = "GET", body = null, auth = true } = {}) {
 }
 
 // ── Toolbar click → inject the in-page selector ────────────────────────────
+// If injection fails there is no in-page UI to complain through — that IS the
+// thing that failed. So flag it on the toolbar button itself: a red "!" badge
+// plus an explanatory tooltip, cleared after a few seconds. Safari blocks
+// injection on its Start Page, about:blank, PDFs and Apple's own pages, and
+// also when the user hasn't granted this site to the extension.
+const DEFAULT_ACTION_TITLE = "Send to Anytype: pick items to clip (⌥⇧A)";
+
+async function flagActionError(tabId, message) {
+  try {
+    await chrome.action.setBadgeText({ text: "!", tabId });
+    await chrome.action.setBadgeBackgroundColor({ color: "#b3261e", tabId });
+    await chrome.action.setTitle({ title: `Send to Anytype — ${message}`, tabId });
+    setTimeout(() => {
+      Promise.resolve(chrome.action.setBadgeText({ text: "", tabId })).catch(() => {});
+      Promise.resolve(
+        chrome.action.setTitle({ title: DEFAULT_ACTION_TITLE, tabId })
+      ).catch(() => {});
+    }, 6000);
+  } catch (_) {
+    // Badges unsupported on this Safari — the console warning is all we have.
+  }
+}
+
 chrome.action.onClicked.addListener(async (tab) => {
   if (!tab || !tab.id) return;
   try {
@@ -118,6 +141,10 @@ chrome.action.onClicked.addListener(async (tab) => {
     });
   } catch (e) {
     console.error("Send to Anytype: failed to inject edit-mode.js:", e);
+    flagActionError(
+      tab.id,
+      "can't clip this page. Safari blocks it here, or site access isn't granted (Safari → Settings → Extensions)."
+    );
   }
 });
 
@@ -260,10 +287,12 @@ async function fetchImageAsDataUrl(url) {
   }
 }
 
+// Returns { markdown, total, failed } so the caller can tell the user how many
+// images didn't make it, rather than degrading them to links behind their back.
 async function inlineImages(markdown) {
-  if (!markdown) return markdown;
+  if (!markdown) return { markdown, total: 0, failed: 0 };
   const urls = [...new Set(Array.from(markdown.matchAll(IMG_MD_RE), (m) => m[2]))];
-  if (!urls.length) return markdown;
+  if (!urls.length) return { markdown, total: 0, failed: 0 };
 
   const resolved = new Map();
   await Promise.all(
@@ -276,10 +305,11 @@ async function inlineImages(markdown) {
     })
   );
 
-  return markdown.replace(IMG_MD_RE, (_whole, alt, url) => {
+  const out = markdown.replace(IMG_MD_RE, (_whole, alt, url) => {
     const dataUrl = resolved.get(url);
     return dataUrl ? `![${alt}](${dataUrl})` : `[${alt || "image"}](${url})`;
   });
+  return { markdown: out, total: urls.length, failed: urls.length - resolved.size };
 }
 
 // ── Create object ──────────────────────────────────────────────────────────
@@ -289,10 +319,12 @@ async function createObject(payload) {
   if (!s.spaceId)
     return { ok: false, error: "No target space selected. Open settings (⚙)." };
 
+  const img = await inlineImages(payload.markdown);
+
   const body = {
     name: payload.name,
     type_key: s.typeKey || "page",
-    body: await inlineImages(payload.markdown),
+    body: img.markdown,
   };
   if (payload.emoji) body.icon = { format: "emoji", emoji: payload.emoji };
 
@@ -305,18 +337,29 @@ async function createObject(payload) {
   const obj = r.data.object || r.data.data || r.data;
   const objectId = obj && (obj.id || obj.object_id);
 
+  // Best-effort deep link back into the desktop app. Not a save failure — but
+  // we do report it, rather than leaving the user wondering why nothing opened.
+  // Note the `await`: chrome.tabs.create returns a promise, so without it a
+  // rejection would escape this try block entirely.
+  let deepLinkFailed = false;
   if (objectId && s.openAfterSave) {
     try {
-      // Best-effort deep link back into the desktop app. If the scheme isn't
-      // registered this just no-ops; we don't treat it as a save failure.
-      chrome.tabs.create({
+      await chrome.tabs.create({
         url: `anytype://object?objectId=${encodeURIComponent(objectId)}&spaceId=${encodeURIComponent(s.spaceId)}`,
         active: false,
       });
     } catch (e) {
+      deepLinkFailed = true;
       console.error("Send to Anytype: couldn't open object deep link:", e);
     }
   }
 
-  return { ok: true, objectId, data: r.data };
+  return {
+    ok: true,
+    objectId,
+    imagesTotal: img.total,
+    imagesFailed: img.failed,
+    deepLinkFailed,
+    data: r.data,
+  };
 }
