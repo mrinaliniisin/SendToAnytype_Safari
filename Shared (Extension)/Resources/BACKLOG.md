@@ -36,13 +36,29 @@ Watch small-size legibility: the 16px toolbar variant must read on both light
 and dark Safari toolbars (the white glyph carries it; consider a monochrome
 template variant if this ever changes).
 
-## Image fidelity
+## Image fidelity — resolved in 1.0.1
 
-Images are embedded into the Markdown body as `![](remote-url)`. Anytype
-renders these by URL; it does not pull the bytes into the object's file store.
-A future option: download each image in the background worker and upload it
-via `POST /v1/spaces/{space}/objects` file upload so clips survive the source
-going offline.
+Originally images were embedded as `![](remote-url)`. That silently **did not
+work**: Anytype's create-object API never fetches remote URLs, so each image
+became an empty, perpetually-spinning block. Verified against the live API —
+a body of `![](anything-remote)` and `![](nonsense)` render identically.
+
+What *does* work is a **data URI**: `![](data:image/png;base64,…)` is decoded
+and ingested as a real Image object in the space (content-addressed, so
+identical bytes dedupe). Anytype then rewrites the stored markdown to point at
+its own local gateway, e.g. `![name](http://127.0.0.1:47800/image/<id>)`.
+Note that gateway is on the port from `space.gateway_url` (47800), not the API
+port (31009).
+
+So `background.js` now downloads each selected image and inlines it as a data
+URI (`inlineImages()`). This must run in the service worker — a content
+script's cross-origin fetch is CORS-blocked — which is why the manifest needs
+`<all_urls>` host permission. Images over 4 MB, or that fail to fetch, degrade
+to a plain markdown link rather than an empty block.
+
+There is also `POST /v1/spaces/{space}/files` (multipart, field `file`) which
+uploads a file and returns `object_id`. It works, but the returned id cannot be
+embedded inline in a body — so it isn't used.
 
 ## Open-after-save deep link
 

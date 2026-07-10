@@ -215,6 +215,73 @@ async function listTypes(spaceId) {
   return { ok: true, types };
 }
 
+// ── Inline images ──────────────────────────────────────────────────────────
+// Anytype's create-object API cannot fetch remote images. A body containing
+// `![](https://…)` yields an empty, perpetually-spinning image block — the
+// bytes never arrive. It DOES decode data URIs, ingesting them as real Image
+// objects in the space. So we download each selected image here and swap the
+// remote URL for an inline data URI.
+//
+// This has to happen in the service worker, not the content script: a content
+// script's cross-origin fetch is blocked by CORS, whereas the worker can read
+// the response because the manifest grants <all_urls> host permission.
+//
+// Failures are non-fatal. An image we can't fetch degrades to a plain markdown
+// link (so the clip still records where it lived) instead of an empty block,
+// and the rest of the object saves normally.
+const IMG_MD_RE = /!\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)/g;
+const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
+const IMAGE_FETCH_TIMEOUT_MS = 15_000;
+
+// btoa() on a multi-megabyte string overflows the call stack, so chunk it.
+async function blobToDataUrl(blob) {
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  let binary = "";
+  const CHUNK = 0x8000;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+  }
+  return `data:${blob.type || "image/png"};base64,${btoa(binary)}`;
+}
+
+async function fetchImageAsDataUrl(url) {
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), IMAGE_FETCH_TIMEOUT_MS);
+  try {
+    // credentials:"omit" — never send the user's cookies to an image host.
+    const r = await fetch(url, { signal: ctl.signal, credentials: "omit" });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const blob = await r.blob();
+    if (!/^image\//.test(blob.type)) throw new Error(`not an image (${blob.type})`);
+    if (blob.size > MAX_IMAGE_BYTES) throw new Error(`too large (${blob.size}B)`);
+    return await blobToDataUrl(blob);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function inlineImages(markdown) {
+  if (!markdown) return markdown;
+  const urls = [...new Set(Array.from(markdown.matchAll(IMG_MD_RE), (m) => m[2]))];
+  if (!urls.length) return markdown;
+
+  const resolved = new Map();
+  await Promise.all(
+    urls.map(async (url) => {
+      try {
+        resolved.set(url, await fetchImageAsDataUrl(url));
+      } catch (e) {
+        console.warn("Send to Anytype: couldn't inline image", url, e.message);
+      }
+    })
+  );
+
+  return markdown.replace(IMG_MD_RE, (_whole, alt, url) => {
+    const dataUrl = resolved.get(url);
+    return dataUrl ? `![${alt}](${dataUrl})` : `[${alt || "image"}](${url})`;
+  });
+}
+
 // ── Create object ──────────────────────────────────────────────────────────
 async function createObject(payload) {
   const s = await getSettings();
@@ -225,7 +292,7 @@ async function createObject(payload) {
   const body = {
     name: payload.name,
     type_key: s.typeKey || "page",
-    body: payload.markdown,
+    body: await inlineImages(payload.markdown),
   };
   if (payload.emoji) body.icon = { format: "emoji", emoji: payload.emoji };
 
