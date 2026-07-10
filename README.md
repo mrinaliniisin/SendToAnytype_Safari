@@ -42,3 +42,10 @@ can **Unpair** any time from the same panel. After pairing, pick your target
 The selected text becomes the new object's Markdown body, selected images are
 embedded as `![](url)`, the page title becomes the object name (editable in the
 panel), and a `[Source](url)` link is appended.
+
+---
+
+## Keyboard shortcut
+
+Default: <kbd>⌥</kbd> <kbd>⇧</kbd> <kbd>A</kbd>. Change it under
+**Safari → Settings → Extensions → Send to Anytype**.

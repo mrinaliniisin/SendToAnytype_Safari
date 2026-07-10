@@ -68,7 +68,7 @@ grep -E "ENABLE_HARDENED_RUNTIME|ENABLE_APP_SANDBOX" Send to Anytype.xcodeproj/p
 ## 5. Sync the version number
 The DMG is named from the app's `CFBundleShortVersionString`
 (= the macOS target's **Marketing Version**), which must match the
-extension's manifest version. They are currently aligned at **0.3.0**.
+extension's manifest version. They are currently aligned at **1.0.0**.
 
 On each release, bump both in lockstep:
 - Xcode → **Send to Anytype (macOS)** target → **General → Identity → Version**
@@ -133,12 +133,17 @@ Do not chase it; ship if the three gates above are green.
 
 ## 8. Publish the GitHub release
 ```sh
-gh release create v0.3.0 dist/Send to Anytype-0.3.0.dmg \
-  --title "Send to Anytype 0.3.0" \
+# Stage a space-free copy first: `gh` sanitizes spaces in asset names to dots
+# ("Send.to.Anytype-1.0.0.dmg"), and its `path#label` rename syntax is unreliable
+# with spaces in the path.
+cp "dist/Send to Anytype-1.0.0.dmg" "dist/SendToAnytype-1.0.0.dmg"
+gh release create v1.0.0 "dist/SendToAnytype-1.0.0.dmg" \
+  --title "Send to Anytype 1.0.0" \
   --notes "What changed…"
+rm -f "dist/SendToAnytype-1.0.0.dmg"
 ```
-The root `README.md` install section links to `../../releases`, so the latest
-DMG is always one click away for users.
+Releases are **immutable**: cut a new version rather than replacing an existing
+release's asset, so a given version always means one exact binary.
 
 ## 9. Gotchas
 - **Wrong cert type** — "Apple Distribution" is App-Store-only and will *not*

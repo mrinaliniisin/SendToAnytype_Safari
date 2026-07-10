@@ -19,11 +19,8 @@
 		7A9587FC2FAAB1F2003DD916 /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9587BC2FAAB1F2003DD916 /* SafariWebExtensionHandler.swift */; };
 		7A9588152FAAB1F2003DD916 /* background.js in Resources */ = {isa = PBXBuildFile; fileRef = 7A95880E2FAAB1F2003DD916 /* background.js */; };
 		7A9588162FAAB1F2003DD916 /* edit-mode.js in Resources */ = {isa = PBXBuildFile; fileRef = 7A95880F2FAAB1F2003DD916 /* edit-mode.js */; };
-		7A9588172FAAB1F2003DD916 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 7A9588102FAAB1F2003DD916 /* README.md */; };
 		7A9588182FAAB1F2003DD916 /* icons in Resources */ = {isa = PBXBuildFile; fileRef = 7A9588112FAAB1F2003DD916 /* icons */; };
 		7A9588192FAAB1F2003DD916 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 7A9588122FAAB1F2003DD916 /* manifest.json */; };
-		7A95881A2FAAB1F2003DD916 /* BACKLOG.md in Resources */ = {isa = PBXBuildFile; fileRef = 7A9588132FAAB1F2003DD916 /* BACKLOG.md */; };
-		7A95881B2FAAB1F2003DD916 /* TESTED.md in Resources */ = {isa = PBXBuildFile; fileRef = 7A9588142FAAB1F2003DD916 /* TESTED.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -273,9 +270,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7A95881A2FAAB1F2003DD916 /* BACKLOG.md in Resources */,
-				7A95881B2FAAB1F2003DD916 /* TESTED.md in Resources */,
-				7A9588172FAAB1F2003DD916 /* README.md in Resources */,
 				7A9588182FAAB1F2003DD916 /* icons in Resources */,
 				7A9588192FAAB1F2003DD916 /* manifest.json in Resources */,
 				7A9588152FAAB1F2003DD916 /* background.js in Resources */,

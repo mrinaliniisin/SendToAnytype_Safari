@@ -5,9 +5,9 @@ working build.
 
 ## Tags / properties
 
-Roger (the project this was forked from) let you attach tags. Anytype tags are
-a per-type **relation property** (multi-select), not a flat list, so attaching
-them through the API is more involved than Theo's auto-created `tag_names`:
+The panel has no tag picker yet. Anytype tags are a per-type **relation
+property** (multi-select), not a flat list of names, so attaching them through
+the API takes more than passing an array of strings:
 
 - Discover the chosen type's tag-like properties via
   `GET /v1/spaces/{space}/types/{type}` (or `/properties`).
@@ -20,11 +20,21 @@ Until then the panel intentionally omits a tag picker to stay robust.
 
 ## Icons
 
-The icon set is inherited from the Roger scaffold (a Scottish Deerhound photo)
-and is a placeholder. Replace `icons/*` and the host app's
-`AppIcon.appiconset` / `LargeIcon.imageset` with an Anytype-appropriate mark.
-Watch small-size legibility: the 16px toolbar variant should read on both
-light and dark Safari toolbars (consider a monochrome template variant).
+The current icon (`icons/mark-*.png`, plus the host app's
+`AppIcon.appiconset` / `LargeIcon.imageset`) is a simple placeholder: a white
+"clip into tray" glyph on a charcoal `#191919` tile, matching the Anytype
+logo's colour scheme. It's serviceable but not real artwork — replace it when
+proper branding exists.
+
+Note: the icon files are deliberately named `mark-*.png`, not `icon-*.png`.
+Safari caches an extension's toolbar icon keyed to the resource *path* and will
+not refresh it on toggle/restart/reboot, so a renamed path is the only reliable
+way to force a re-render. If you ever change the icon art again, also rename
+the files, or users will keep seeing the old icon.
+
+Watch small-size legibility: the 16px toolbar variant must read on both light
+and dark Safari toolbars (the white glyph carries it; consider a monochrome
+template variant if this ever changes).
 
 ## Image fidelity
 
