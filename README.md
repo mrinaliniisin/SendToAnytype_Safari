@@ -18,6 +18,17 @@ page.
 > `http://localhost:31009`, so it does nothing unless the Anytype desktop app
 > is running locally.
 
+## About Anytype
+
+[Anytype](https://anytype.io) is the app this extension clips into — a
+local-first, end-to-end-encrypted, open-source workspace for notes, documents,
+and personal knowledge. Think of it as a private, offline-first alternative to
+Notion: your data lives on your own device, not someone else's server. Send to
+Anytype is a companion, not a replacement — it simply gives Anytype a "clip from
+the web" button. Anytype is free; download the desktop app for macOS, Windows,
+or Linux from the [Anytype downloads page](https://download.anytype.io/), and
+keep it running for this extension to have somewhere to send clips.
+
 ---
 
 ## First run — pair with Anytype
