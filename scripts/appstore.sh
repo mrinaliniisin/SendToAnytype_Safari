@@ -25,10 +25,10 @@
 # error — that is expected, not a bug in this script.
 #
 # ── Usage ─────────────────────────────────────────────────────────────────
-#   DEVELOPMENT_TEAM=DLUVK9BUZV ./scripts/appstore.sh
+#   DEVELOPMENT_TEAM=A1B2C3D4E5 ./scripts/appstore.sh
 #
 #   # …and to also upload to App Store Connect in the same run:
-#   DEVELOPMENT_TEAM=DLUVK9BUZV UPLOAD=1 \
+#   DEVELOPMENT_TEAM=A1B2C3D4E5 UPLOAD=1 \
 #     APPLE_ID="you@example.com" APP_PASSWORD="xxxx-xxxx-xxxx-xxxx" \
 #     ./scripts/appstore.sh
 #   (APP_PASSWORD = an app-specific password from appleid.apple.com. If you'd
@@ -58,7 +58,7 @@ OUTPUT_DIR="${OUTPUT_DIR:-${REPO_ROOT}/dist}"
 APP_NAME="Send to Anytype"
 APP_BUNDLE_ID="com.sindhus.sendtoanytype"
 
-: "${DEVELOPMENT_TEAM:?Set DEVELOPMENT_TEAM to your 10-char Apple team ID (e.g. DLUVK9BUZV)}"
+: "${DEVELOPMENT_TEAM:?Set DEVELOPMENT_TEAM to your 10-char Apple team ID (e.g. A1B2C3D4E5)}"
 
 BUILD_DIR="${REPO_ROOT}/build"
 ARCHIVE_PATH="${BUILD_DIR}/${APP_NAME}-AppStore.xcarchive"
