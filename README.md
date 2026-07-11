@@ -10,6 +10,10 @@ and hit **Send to Anytype**. The selection is saved as a new object whose body
 is the selected text plus images (as Markdown), with a link back to the source
 page.
 
+![Send to Anytype — click the toolbar icon, select images and text, pick a Space and type, and send the clip to your local Anytype.](docs/demo.gif)
+
+*Illustrated walkthrough (not a screen recording).*
+
 > Send to Anytype only talks to the Anytype Local API on
 > `http://localhost:31009`, so it does nothing unless the Anytype desktop app
 > is running locally.
