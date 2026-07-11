@@ -86,7 +86,7 @@ developer receives nothing. See `PRIVACY.md`.
 
 ## App Review notes — paste into App Store Connect → App Review Information
 (This is the critical mitigation for the "app requires external software"
-rejection. Also attach the demo video described in APP_STORE.md §8.)
+rejection. Also attach the demo video described below.)
 
 > Send to Anytype is a companion Safari extension for Anytype
 > (https://anytype.io), a local-first notes and knowledge app the user runs on
@@ -123,6 +123,16 @@ rejection. Also attach the demo video described in APP_STORE.md §8.)
 > are made without cookies or credentials.
 
 ---
+
+## Demo video (attach to App Review, ≤ 5 min)
+Because Apple's review VM has no local Anytype, record a screen capture of the
+full flow and attach it in App Store Connect → App Review Information:
+1. One-time pairing: the panel's gear (⚙) → **Pair with Anytype**, entering the
+   4-digit code Anytype displays.
+2. Toolbar icon on any web page (e.g. a Wikipedia article); edit mode
+   activating; selecting an image + a text block.
+3. Picking the target **Space** and object **Type**, then **Send to Anytype**.
+4. The new object (with the image) appearing in the Anytype desktop app.
 
 ## Screenshots to capture (macOS: 1280×800 or 1440×900, 1–10 images)
 1. Toolbar button + the in-page selection panel open on a normal web page.

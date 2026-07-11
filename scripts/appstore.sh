@@ -7,9 +7,11 @@
 #
 # This is the "Tier B" pipeline. It is INTENTIONALLY separate from release.sh:
 # different certificates, a provisioning profile, and a .pkg (not a .dmg).
-# See APP_STORE.md for the full walkthrough — this script automates §7.
+# This script automates the archive → App-Store-signed .pkg export. The
+# surrounding account setup (App IDs, App Store Connect record, listing) is
+# manual; STORE_ASSETS.md holds the listing copy and reviewer notes.
 #
-# ── One-time setup REQUIRED before this script can succeed (APP_STORE.md) ───
+# ── One-time setup REQUIRED before this script can succeed ──────────────────
 #   §1  Register both App IDs in the developer portal:
 #         com.sindhus.sendtoanytype  and  com.sindhus.sendtoanytype.Extension
 #   §2  Install BOTH App Store certs (Xcode → Settings → Accounts →
@@ -83,7 +85,7 @@ if ! security find-identity -v | grep -Eq "Mac Installer Distribution|3rd Party 
 fi
 if [ "${missing}" -ne 0 ]; then
   echo "  Create the missing cert(s) in Xcode → Settings → Accounts →" >&2
-  echo "  Manage Certificates → +.  (See APP_STORE.md §2.)" >&2
+  echo "  Manage Certificates → +." >&2
   exit 1
 fi
 
@@ -94,7 +96,8 @@ mkdir -p "${BUILD_DIR}" "${OUTPUT_DIR}"
 # Automatic signing + -allowProvisioningUpdates lets Xcode create/download the
 # Mac App Store provisioning profiles for both the app and the nested appex,
 # so you don't have to manage two profiles by hand. Requires being signed into
-# your Apple ID in Xcode and the App IDs from APP_STORE.md §1 to exist.
+# your Apple ID in Xcode, and both App IDs (com.sindhus.sendtoanytype and
+# .Extension) registered in the developer portal.
 echo "▸ [1/4] Archiving (App Store)…"
 xcodebuild archive \
   -project "${PROJECT}" \
@@ -172,4 +175,4 @@ echo
 echo "✓ Done: ${PKG_PATH}"
 echo "  Next: App Store Connect → your app → macOS → select this build,"
 echo "  fill in the listing (see STORE_ASSETS.md), attach the demo video +"
-echo "  reviewer notes (APP_STORE.md §8), then Submit for Review."
+echo "  reviewer notes (STORE_ASSETS.md), then Submit for Review."
