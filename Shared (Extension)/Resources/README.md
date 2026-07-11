@@ -62,5 +62,4 @@ the repo root.
 
 Make sure the Anytype desktop app is running, then click the toolbar icon.
 After editing files in this folder, rebuild in Xcode (⌘R) and reload the
-page. See the repo-root `README.md` for full build/install docs and
-`RELEASING.md` for cutting a notarized DMG.
+page. See the repo-root `README.md` for full build/install docs.

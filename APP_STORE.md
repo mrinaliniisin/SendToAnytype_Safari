@@ -1,7 +1,7 @@
 # Releasing Send to Anytype (Mac App Store)
 
 Send to Anytype-specific guide. Ships Send to Anytype as a free Mac App Store app, **in
-parallel with** the GitHub notarized-DMG release (see `RELEASING.md`).
+parallel with** the GitHub notarized-DMG release (`scripts/release.sh`).
 Same source, two signing pipelines, two artifacts.
 
 This is **not** the notarization path: no Developer ID cert, no `notarytool
@@ -46,8 +46,8 @@ Verify both landed:
 security find-identity -v -p codesigning | grep -E "Apple Distribution|Mac Installer Distribution"
 # expect two lines, both valid
 ```
-You'll keep these *alongside* your Developer ID Application cert from
-`RELEASING.md` — they don't conflict.
+You'll keep these *alongside* the Developer ID Application cert used for the
+direct-download DMG (`scripts/release.sh`) — they don't conflict.
 
 ## 3. Create the Mac App Store provisioning profile
 Portal → **Profiles → ＋ → Mac App Store**:
@@ -75,8 +75,8 @@ Then under **Pricing and Availability** → **Free**.
 — it's for paid apps.)
 
 ## 5. Verify Send to Anytype's signing & entitlements
-Same project settings that `RELEASING.md` checks; they already satisfy
-both pipelines.
+The project already enables **App Sandbox** and **Hardened Runtime**, which
+satisfy both the App Store and the notarized-DMG pipelines.
 
 ```sh
 grep -E "ENABLE_HARDENED_RUNTIME|ENABLE_APP_SANDBOX" Send to Anytype.xcodeproj/project.pbxproj | sort -u
@@ -159,7 +159,7 @@ xcodebuild -exportArchive \
     --bundle-version 1 \
     --bundle-short-version-string 1.0.0 \
     --apple-id "YOUR_APPLE_ID_EMAIL" \
-    --password "@keychain:SendToAnytypeNotary"   # reuses the app-specific password from RELEASING.md §3
+    --password "@keychain:SendToAnytypeNotary"   # app-specific password (appleid.apple.com), cached once via: xcrun notarytool store-credentials SendToAnytypeNotary
   ```
 
 Within ~10 minutes the build appears in App Store Connect under
@@ -255,5 +255,5 @@ back-and-forth on the localhost-dependency point.
 > Dependency order that bites people: **App IDs (§1) → certs (§2) →
 > provisioning profile (§3) → App Store Connect record (§4) → upload
 > (§7) → review materials (§8)**. The App Store path needs *all* of these,
-> in this order. The Developer ID/notarization path (RELEASING.md) needs
-> *none* of §1, §3, §4, §8 — that's the trade for direct distribution.
+> in this order. The Developer ID/notarization path (`scripts/release.sh`)
+> needs *none* of §1, §3, §4, §8 — that's the trade for direct distribution.

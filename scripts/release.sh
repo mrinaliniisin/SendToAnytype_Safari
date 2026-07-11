@@ -8,7 +8,7 @@
 # "Allow Unsigned Extensions". It requires a paid Apple Developer Program
 # membership (for the Developer ID Application certificate + notarization).
 #
-# ── One-time setup (see RELEASING.md for the full walkthrough) ────────────
+# ── One-time setup ────────────────────────────────────────────────────────
 #   1. Install a "Developer ID Application" certificate into your keychain
 #      (Xcode → Settings → Accounts → Manage Certificates → +).
 #   2. Store notarization credentials once under a named profile:
@@ -60,7 +60,6 @@ echo
 if ! security find-identity -v -p codesigning | grep -q "Developer ID Application"; then
   echo "✗ No 'Developer ID Application' certificate found in your keychain." >&2
   echo "  Create one in Xcode → Settings → Accounts → Manage Certificates → + ." >&2
-  echo "  (See RELEASING.md.)" >&2
   exit 1
 fi
 
@@ -119,7 +118,7 @@ APP_PATH="${EXPORT_DIR}/${APP_NAME}.app"
 # even after stripping, so a --strict check is racy and would fail the release
 # spuriously. Empty FinderInfo is benign: it is not sealed into the signature,
 # Apple's notary accepts it, and Gatekeeper (spctl) accepts both the DMG and
-# the app. Those are the gates that actually govern users — see RELEASING.md §7.
+# the app. Those are the gates that actually govern users.
 echo "▸ Stripping stray xattrs from the exported app…"
 xattr -cr "${APP_PATH}"
 codesign --verify --deep --verbose=2 "${APP_PATH}"
