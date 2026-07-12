@@ -46,20 +46,6 @@ can **Unpair** any time from the same panel. After pairing, pick your target
 
 ---
 
-## How it works
-
-| Component | Role |
-|---|---|
-| **Host app** (`Send to Anytype.app`) | Tiny macOS app that registers the extension with Safari. Required by Safari's extension model — there's no "load unpacked" for users. |
-| `background.js` | MV3 service worker and the sole Anytype Local API client. Injects the content script on icon click and proxies all network calls — pairing, list spaces, list types, create object — to Anytype. Running the `fetch` from the extension origin avoids the mixed-content + CORS blocking that would stop an HTTPS page from reaching `http://localhost`. |
-| `edit-mode.js` | The in-page UI. Installs a transparent click-shield over the page so selections never race with the host site's own click handlers, mounts a Shadow-DOM control panel, and drives the pair / space / type flow. |
-
-The selected text becomes the new object's Markdown body, selected images are
-embedded as `![](url)`, the page title becomes the object name (editable in the
-panel), and a `[Source](url)` link is appended.
-
----
-
 ## Keyboard shortcut
 
 Default: <kbd>⌥</kbd> <kbd>⇧</kbd> <kbd>A</kbd>. Change it under
