@@ -4,11 +4,16 @@ A Safari Web Extension that lets you click images and text blocks on any
 webpage and clip them into your local [Anytype](https://anytype.io) as a new
 object.
 
-Click the toolbar icon on any page, the page enters a crosshair "edit mode",
-you click the images and text you want, pick the target Space and object type,
-and hit **Send to Anytype**. The selection is saved as a new object whose body
-is the selected text plus images (as Markdown), with a link back to the source
-page.
+To clip a page:
+
+1. Click the **Send to Anytype** toolbar icon — the page enters a crosshair
+   "edit mode".
+2. Click the images and text blocks you want to clip.
+3. Pick the target **Space** and object **Type**.
+4. Hit **Send to Anytype**.
+
+The selection is saved as a new object whose body is the selected text plus
+images (as Markdown), with a link back to the source page.
 
 ![Send to Anytype — click the toolbar icon, select images and text, pick a Space and type, and send the clip to your local Anytype.](docs/demo.gif)
 
