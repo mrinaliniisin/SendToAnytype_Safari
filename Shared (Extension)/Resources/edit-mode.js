@@ -834,7 +834,9 @@
         // The object saved, but parts of it may have quietly degraded. Say so
         // instead of flashing a clean checkmark over a partial result.
         const notes = [];
-        if (r.imagesFailed > 0) {
+        if (r.imagesAsLinks) {
+          notes.push("images were too large to embed — saved as links");
+        } else if (r.imagesFailed > 0) {
           notes.push(
             `${r.imagesFailed}/${r.imagesTotal} image${r.imagesTotal === 1 ? "" : "s"} couldn't be downloaded — saved as links`
           );

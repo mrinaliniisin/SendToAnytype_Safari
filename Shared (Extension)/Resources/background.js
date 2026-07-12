@@ -257,8 +257,19 @@ async function listTypes(spaceId) {
 // link (so the clip still records where it lived) instead of an empty block,
 // and the rest of the object saves normally.
 const IMG_MD_RE = /!\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)/g;
-const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 const IMAGE_FETCH_TIMEOUT_MS = 15_000;
+
+// Full-size product images inlined as base64 make the create-object body huge —
+// a handful of them and Anytype rejects the whole object ("failed to create
+// block"). So we downscale + re-encode each image to a bounded JPEG before
+// inlining. Re-encoding through a canvas also normalizes odd formats (webp, and
+// CDN images Anytype can't block-ify) to plain JPEG, which it reliably ingests.
+const IMG_MAX_DIM = 1000;          // longest edge, px
+const IMG_JPEG_QUALITY = 0.65;
+// Hard ceiling on the combined inlined-image text. Past this, remaining images
+// degrade to plain links rather than risk a body Anytype refuses. (base64 text
+// is ~1.33× the byte size.)
+const MAX_TOTAL_INLINE_CHARS = 800 * 1024;
 
 // btoa() on a multi-megabyte string overflows the call stack, so chunk it.
 async function blobToDataUrl(blob) {
@@ -271,6 +282,34 @@ async function blobToDataUrl(blob) {
   return `data:${blob.type || "image/png"};base64,${btoa(binary)}`;
 }
 
+// Downscale + re-encode to JPEG when the worker has OffscreenCanvas (Safari 17+);
+// otherwise fall back to the original bytes. The blob was fetched by the
+// extension, so the canvas is not tainted and convertToBlob works.
+async function encodeImage(blob) {
+  if (
+    typeof createImageBitmap === "function" &&
+    typeof OffscreenCanvas === "function"
+  ) {
+    try {
+      const bmp = await createImageBitmap(blob);
+      const scale = Math.min(1, IMG_MAX_DIM / Math.max(bmp.width, bmp.height));
+      const w = Math.max(1, Math.round(bmp.width * scale));
+      const h = Math.max(1, Math.round(bmp.height * scale));
+      const canvas = new OffscreenCanvas(w, h);
+      canvas.getContext("2d").drawImage(bmp, 0, 0, w, h);
+      if (bmp.close) bmp.close();
+      const out = await canvas.convertToBlob({
+        type: "image/jpeg",
+        quality: IMG_JPEG_QUALITY,
+      });
+      return await blobToDataUrl(out);
+    } catch (e) {
+      console.warn("Send to Anytype: image re-encode failed, using original:", e.message);
+    }
+  }
+  return await blobToDataUrl(blob);
+}
+
 async function fetchImageAsDataUrl(url) {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), IMAGE_FETCH_TIMEOUT_MS);
@@ -280,19 +319,19 @@ async function fetchImageAsDataUrl(url) {
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const blob = await r.blob();
     if (!/^image\//.test(blob.type)) throw new Error(`not an image (${blob.type})`);
-    if (blob.size > MAX_IMAGE_BYTES) throw new Error(`too large (${blob.size}B)`);
-    return await blobToDataUrl(blob);
+    return await encodeImage(blob);
   } finally {
     clearTimeout(timer);
   }
 }
 
-// Returns { markdown, total, failed } so the caller can tell the user how many
-// images didn't make it, rather than degrading them to links behind their back.
+// Returns { markdown, total, inlined, failed }. `failed` = couldn't download;
+// images that downloaded but wouldn't fit under the total cap silently degrade
+// to links (not counted as failed).
 async function inlineImages(markdown) {
-  if (!markdown) return { markdown, total: 0, failed: 0 };
+  if (!markdown) return { markdown, total: 0, inlined: 0, failed: 0 };
   const urls = [...new Set(Array.from(markdown.matchAll(IMG_MD_RE), (m) => m[2]))];
-  if (!urls.length) return { markdown, total: 0, failed: 0 };
+  if (!urls.length) return { markdown, total: 0, inlined: 0, failed: 0 };
 
   const resolved = new Map();
   await Promise.all(
@@ -305,11 +344,33 @@ async function inlineImages(markdown) {
     })
   );
 
-  const out = markdown.replace(IMG_MD_RE, (_whole, alt, url) => {
+  // Greedily inline in document order under the total-size cap; the rest fall
+  // back to links so one big page can't produce a body Anytype rejects.
+  const use = new Map();
+  let usedChars = 0, inlined = 0, failed = 0;
+  for (const url of urls) {
     const dataUrl = resolved.get(url);
+    if (!dataUrl) { failed++; continue; }
+    if (usedChars + dataUrl.length > MAX_TOTAL_INLINE_CHARS) continue; // → link
+    use.set(url, dataUrl);
+    usedChars += dataUrl.length;
+    inlined++;
+  }
+
+  const out = markdown.replace(IMG_MD_RE, (_whole, alt, url) => {
+    const dataUrl = use.get(url);
     return dataUrl ? `![${alt}](${dataUrl})` : `[${alt || "image"}](${url})`;
   });
-  return { markdown: out, total: urls.length, failed: urls.length - resolved.size };
+  return { markdown: out, total: urls.length, inlined, failed };
+}
+
+// Convert every remote image to a plain markdown link. Used as the retry body
+// when a create with inline images is rejected, so the clip still saves.
+function linkifyImages(markdown) {
+  return (markdown || "").replace(
+    IMG_MD_RE,
+    (_whole, alt, url) => `[${alt || "image"}](${url})`
+  );
 }
 
 // ── Create object ──────────────────────────────────────────────────────────
@@ -320,18 +381,24 @@ async function createObject(payload) {
     return { ok: false, error: "No target space selected. Open settings (⚙)." };
 
   const img = await inlineImages(payload.markdown);
+  const base = { name: payload.name, type_key: s.typeKey || "page" };
+  if (payload.emoji) base.icon = { format: "emoji", emoji: payload.emoji };
+  const path = `/v1/spaces/${encodeURIComponent(s.spaceId)}/objects`;
 
-  const body = {
-    name: payload.name,
-    type_key: s.typeKey || "page",
-    body: img.markdown,
-  };
-  if (payload.emoji) body.icon = { format: "emoji", emoji: payload.emoji };
+  let r = await api(path, { method: "POST", body: { ...base, body: img.markdown } });
 
-  const r = await api(`/v1/spaces/${encodeURIComponent(s.spaceId)}/objects`, {
-    method: "POST",
-    body,
-  });
+  // Safety net: if Anytype rejected the object AND we inlined images, the images
+  // are the likely culprit (too large, or a format it can't block-ify). Retry
+  // once with every image as a plain link so the clip still saves — text and
+  // source intact — instead of failing outright.
+  let imagesAsLinks = false;
+  if (!r.ok && img.inlined > 0) {
+    const r2 = await api(path, {
+      method: "POST",
+      body: { ...base, body: linkifyImages(payload.markdown) },
+    });
+    if (r2.ok) { r = r2; imagesAsLinks = true; }
+  }
   if (!r.ok) return r;
 
   const obj = r.data.object || r.data.data || r.data;
@@ -358,7 +425,9 @@ async function createObject(payload) {
     ok: true,
     objectId,
     imagesTotal: img.total,
+    imagesInlined: imagesAsLinks ? 0 : img.inlined,
     imagesFailed: img.failed,
+    imagesAsLinks,
     deepLinkFailed,
     data: r.data,
   };
