@@ -46,6 +46,30 @@ can **Unpair** any time from the same panel. After pairing, pick your target
 
 ---
 
+## Privacy
+
+Send to Anytype keeps your data on your own machine.
+
+- **Your clips go only to your local Anytype.** The extension talks to the
+  Anytype Local API at `http://localhost:31009` — a loopback address on your
+  own computer. The text, images, and source link you clip are written into
+  your local Anytype and sent nowhere else: not to the developer, not to Apple,
+  not to any third-party server. No analytics, no tracking, no account.
+- **It doesn't read your notes.** To fill the Space and object-type pickers it
+  lists your Spaces and types *by name*; it never reads the contents of your
+  existing objects. It only ever **creates** new ones.
+- **The pairing key stays local.** Pairing produces an API key stored on your
+  device (in the extension's own storage) and used only to reach your local
+  Anytype. It never leaves your machine — remove it any time with **Unpair**.
+- **The only data that ever leaves** is when the extension downloads an image
+  you selected, fetched from the page's image host **without cookies or
+  credentials** — so it carries nothing about you. Nothing about you or your
+  Anytype is ever sent out.
+
+Full policy: [PRIVACY.md](PRIVACY.md).
+
+---
+
 ## Keyboard shortcut
 
 Default: <kbd>⌥</kbd> <kbd>⇧</kbd> <kbd>A</kbd>. Change it under
